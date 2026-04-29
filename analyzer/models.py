@@ -31,6 +31,14 @@ class InsuranceDocument(models.Model):
     risk_level = models.CharField(max_length=50, blank=True, null=True)
 
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    age = models.IntegerField(blank=True, null=True)
+    sex = models.CharField(max_length=20, blank=True, null=True)
+    bmi = models.FloatField(blank=True, null=True)
+    children = models.IntegerField(blank=True, null=True)
+    smoker = models.CharField(max_length=10, blank=True, null=True)
+    region = models.CharField(max_length=50, blank=True, null=True)
+
+    predicted_cost = models.FloatField(blank=True, null=True)
 
     def __str__(self):
         return self.title

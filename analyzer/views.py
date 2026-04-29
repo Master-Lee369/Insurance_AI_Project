@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
+from .ml.prediction_engine import predict_expected_cost, calculate_real_life_risk
 
 from .models import InsuranceDocument
 from .forms import InsuranceDocumentForm
@@ -57,13 +58,31 @@ def upload_document(request):
             extracted_text = extract_text_from_document(file_path)
             document_type = classify_document(extracted_text)
             extracted_details = extract_all_details(extracted_text)
+            prediction_result = predict_expected_cost(
+                age=insurance_doc.age,
+                sex=insurance_doc.sex,
+                bmi=insurance_doc.bmi,
+                children=insurance_doc.children,
+                smoker=insurance_doc.smoker,
+                region=insurance_doc.region
+            )
+
+            predicted_cost = prediction_result["predicted_cost"]
+
+            ml_risk_level = calculate_real_life_risk(
+                predicted_cost=predicted_cost,
+                coverage_amount=extracted_details['coverage_amount'],
+                premium_amount=extracted_details['premium_amount']
+            )
 
             recommendation_data = generate_recommendation(
                 document_type=document_type,
                 premium=extracted_details['premium_amount'],
                 coverage=extracted_details['coverage_amount'],
                 exclusions=extracted_details['exclusions'],
-                claim_terms=extracted_details['claim_terms']
+                claim_terms=extracted_details['claim_terms'],
+                predicted_cost=predicted_cost,
+                ml_risk_level=ml_risk_level
             )
 
             insurance_doc.extracted_text = extracted_text
@@ -75,6 +94,7 @@ def upload_document(request):
             insurance_doc.claim_terms = extracted_details['claim_terms']
             insurance_doc.recommendation = recommendation_data['recommendation']
             insurance_doc.risk_level = recommendation_data['risk_level']
+            insurance_doc.predicted_cost = predicted_cost
             insurance_doc.save()
 
             return redirect('result', pk=insurance_doc.pk)

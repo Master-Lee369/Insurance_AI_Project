@@ -1,0 +1,9 @@
+Django
+Pillow
+pytesseract
+pdfminer.six
+spacy
+nltk
+scikit-learn
+transformers
+torch
